@@ -47,13 +47,45 @@ define(['exports', 'aurelia-templating', 'aurelia-loader', 'aurelia-dependency-i
     });
   }
 
+  function injectCssLinkTag(address, id) {
+    var url = _aureliaPal.PLATFORM.global.requirejs.toUrl(address);
+
+    var cssHref = /^\./i.replace(url, '');
+
+    if (id) {
+      var oldLink = _aureliaPal.DOM.getElementById(id);
+      if (oldLink) {
+        var isLinkTag = oldLink.tagName.toLowerCase() === 'link';
+
+        if (isLinkTag) {
+          oldLink.href = cssHref;
+          return;
+        }
+
+        throw new Error('The provided id: \'' + id + '\' does not indicate a link tag.');
+      }
+    }
+
+    var node = _aureliaPal.DOM.createElement('link');
+    node.href = cssHref;
+    node.rel = 'stylesheet';
+
+    if (id) {
+      node.id = id;
+    }
+
+    var headNode = _aureliaPal.DOM.querySelector('head');
+    headNode.appendChild(node);
+  }
+
   var CSSResource = function () {
-    function CSSResource(address) {
+    function CSSResource(address, injectAsLinkTag) {
       
 
       this.address = address;
       this._scoped = null;
       this._global = false;
+      this._globalInjectAsLinkTag = !!injectAsLinkTag;
       this._alreadyGloballyInjected = false;
     }
 
@@ -79,7 +111,11 @@ define(['exports', 'aurelia-templating', 'aurelia-loader', 'aurelia-dependency-i
         _this._scoped.css = text;
         if (_this._global) {
           _this._alreadyGloballyInjected = true;
-          _aureliaPal.DOM.injectStyles(text);
+          if (_this._globalInjectAsLinkTag) {
+            injectCssLinkTag(_this.address, _this.address);
+          } else {
+            _aureliaPal.DOM.injectStyles(text);
+          }
         }
       });
     };
@@ -102,18 +138,22 @@ define(['exports', 'aurelia-templating', 'aurelia-loader', 'aurelia-dependency-i
         var styleNode = _aureliaPal.DOM.injectStyles(this.css, content, true);
         styleNode.setAttribute('scoped', 'scoped');
       } else if (this._global && !this.owner._alreadyGloballyInjected) {
-        _aureliaPal.DOM.injectStyles(this.css);
         this.owner._alreadyGloballyInjected = true;
+        if (this.owner._globalInjectAsLinkTag) {
+          injectCssLinkTag(this.owner.address, this.owner.address);
+        } else {
+          _aureliaPal.DOM.injectStyles(text);
+        }
       }
     };
 
     return CSSViewEngineHooks;
   }();
 
-  function _createCSSResource(address) {
+  function _createCSSResource(address, injectAsLinkTag) {
     var _dec, _class;
 
-    var ViewCSS = (_dec = (0, _aureliaTemplating.resource)(new CSSResource(address)), _dec(_class = function (_CSSViewEngineHooks) {
+    var ViewCSS = (_dec = (0, _aureliaTemplating.resource)(new CSSResource(address, injectAsLinkTag)), _dec(_class = function (_CSSViewEngineHooks) {
       _inherits(ViewCSS, _CSSViewEngineHooks);
 
       function ViewCSS() {

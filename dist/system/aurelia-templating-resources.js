@@ -5,7 +5,16 @@ System.register(['./compose', './if', './else', './with', './repeat', './show', 
 
   var Compose, If, Else, With, Repeat, Show, Hide, SanitizeHTMLValueConverter, Replaceable, Focus, ViewEngine, _createCSSResource, HTMLSanitizer, AttrBindingBehavior, OneTimeBindingBehavior, OneWayBindingBehavior, TwoWayBindingBehavior, FromViewBindingBehavior, ToViewBindingBehavior, ThrottleBindingBehavior, DebounceBindingBehavior, SelfBindingBehavior, SignalBindingBehavior, BindingSignaler, UpdateTriggerBindingBehavior, AbstractRepeater, RepeatStrategyLocator, configureHtmlResourcePlugin, NullRepeatStrategy, ArrayRepeatStrategy, MapRepeatStrategy, SetRepeatStrategy, NumberRepeatStrategy, createFullOverrideContext, updateOverrideContext, getItemsSourceExpression, isOneTime, updateOneTimeBinding, unwrapExpression, viewsRequireLifecycle, injectAureliaHideStyleAtHead;
 
-  function configure(config) {
+  function configure(config, callback) {
+    var options = {
+      injectAsLinkTag: false
+    };
+    if (callback) {
+      if (typeof callback === 'function') {
+        options = callback(options);
+      }
+    }
+
     injectAureliaHideStyleAtHead();
 
     config.globalResources(Compose, If, Else, With, Repeat, Show, Hide, Replaceable, Focus, SanitizeHTMLValueConverter, OneTimeBindingBehavior, OneWayBindingBehavior, ToViewBindingBehavior, FromViewBindingBehavior, TwoWayBindingBehavior, ThrottleBindingBehavior, DebounceBindingBehavior, SelfBindingBehavior, SignalBindingBehavior, UpdateTriggerBindingBehavior, AttrBindingBehavior);
@@ -17,7 +26,7 @@ System.register(['./compose', './if', './else', './with', './repeat', './show', 
       fetch: function fetch(address) {
         var _ref;
 
-        return _ref = {}, _ref[address] = _createCSSResource(address), _ref;
+        return _ref = {}, _ref[address] = _createCSSResource(address, options.injectAsLinkTag), _ref;
       }
     };
     ['.css', '.less', '.sass', '.scss', '.styl'].forEach(function (ext) {

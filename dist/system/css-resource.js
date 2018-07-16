@@ -3,7 +3,7 @@
 System.register(['aurelia-templating', 'aurelia-loader', 'aurelia-dependency-injection', 'aurelia-path', 'aurelia-pal'], function (_export, _context) {
   "use strict";
 
-  var ViewResources, resource, ViewCompileInstruction, Loader, Container, relativeToFile, DOM, FEATURE, cssUrlMatcher, CSSResource, CSSViewEngineHooks;
+  var ViewResources, resource, ViewCompileInstruction, Loader, Container, relativeToFile, DOM, FEATURE, PLATFORM, cssUrlMatcher, CSSResource, CSSViewEngineHooks;
 
   function _possibleConstructorReturn(self, call) {
     if (!self) {
@@ -44,10 +44,41 @@ System.register(['aurelia-templating', 'aurelia-loader', 'aurelia-dependency-inj
     });
   }
 
-  function _createCSSResource(address) {
+  function injectCssLinkTag(address, id) {
+    var url = PLATFORM.global.requirejs.toUrl(address);
+
+    var cssHref = /^\./i.replace(url, '');
+
+    if (id) {
+      var oldLink = DOM.getElementById(id);
+      if (oldLink) {
+        var isLinkTag = oldLink.tagName.toLowerCase() === 'link';
+
+        if (isLinkTag) {
+          oldLink.href = cssHref;
+          return;
+        }
+
+        throw new Error('The provided id: \'' + id + '\' does not indicate a link tag.');
+      }
+    }
+
+    var node = DOM.createElement('link');
+    node.href = cssHref;
+    node.rel = 'stylesheet';
+
+    if (id) {
+      node.id = id;
+    }
+
+    var headNode = DOM.querySelector('head');
+    headNode.appendChild(node);
+  }
+
+  function _createCSSResource(address, injectAsLinkTag) {
     var _dec, _class;
 
-    var ViewCSS = (_dec = resource(new CSSResource(address)), _dec(_class = function (_CSSViewEngineHooks) {
+    var ViewCSS = (_dec = resource(new CSSResource(address, injectAsLinkTag)), _dec(_class = function (_CSSViewEngineHooks) {
       _inherits(ViewCSS, _CSSViewEngineHooks);
 
       function ViewCSS() {
@@ -78,17 +109,19 @@ System.register(['aurelia-templating', 'aurelia-loader', 'aurelia-dependency-inj
     }, function (_aureliaPal) {
       DOM = _aureliaPal.DOM;
       FEATURE = _aureliaPal.FEATURE;
+      PLATFORM = _aureliaPal.PLATFORM;
     }],
     execute: function () {
       cssUrlMatcher = /url\((?!['"]data)([^)]+)\)/gi;
 
       CSSResource = function () {
-        function CSSResource(address) {
+        function CSSResource(address, injectAsLinkTag) {
           
 
           this.address = address;
           this._scoped = null;
           this._global = false;
+          this._globalInjectAsLinkTag = !!injectAsLinkTag;
           this._alreadyGloballyInjected = false;
         }
 
@@ -114,7 +147,11 @@ System.register(['aurelia-templating', 'aurelia-loader', 'aurelia-dependency-inj
             _this._scoped.css = text;
             if (_this._global) {
               _this._alreadyGloballyInjected = true;
-              DOM.injectStyles(text);
+              if (_this._globalInjectAsLinkTag) {
+                injectCssLinkTag(_this.address, _this.address);
+              } else {
+                DOM.injectStyles(text);
+              }
             }
           });
         };
@@ -137,8 +174,12 @@ System.register(['aurelia-templating', 'aurelia-loader', 'aurelia-dependency-inj
             var styleNode = DOM.injectStyles(this.css, content, true);
             styleNode.setAttribute('scoped', 'scoped');
           } else if (this._global && !this.owner._alreadyGloballyInjected) {
-            DOM.injectStyles(this.css);
             this.owner._alreadyGloballyInjected = true;
+            if (this.owner._globalInjectAsLinkTag) {
+              injectCssLinkTag(this.owner.address, this.owner.address);
+            } else {
+              DOM.injectStyles(text);
+            }
           }
         };
 

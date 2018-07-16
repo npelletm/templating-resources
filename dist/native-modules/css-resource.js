@@ -8,7 +8,7 @@ import { ViewResources, resource, ViewCompileInstruction } from 'aurelia-templat
 import { Loader } from 'aurelia-loader';
 import { Container } from 'aurelia-dependency-injection';
 import { relativeToFile } from 'aurelia-path';
-import { DOM, FEATURE } from 'aurelia-pal';
+import { DOM, FEATURE, PLATFORM } from 'aurelia-pal';
 
 var cssUrlMatcher = /url\((?!['"]data)([^)]+)\)/gi;
 
@@ -25,13 +25,45 @@ function fixupCSSUrls(address, css) {
   });
 }
 
+function injectCssLinkTag(address, id) {
+  var url = PLATFORM.global.requirejs.toUrl(address);
+
+  var cssHref = /^\./i.replace(url, '');
+
+  if (id) {
+    var oldLink = DOM.getElementById(id);
+    if (oldLink) {
+      var isLinkTag = oldLink.tagName.toLowerCase() === 'link';
+
+      if (isLinkTag) {
+        oldLink.href = cssHref;
+        return;
+      }
+
+      throw new Error('The provided id: \'' + id + '\' does not indicate a link tag.');
+    }
+  }
+
+  var node = DOM.createElement('link');
+  node.href = cssHref;
+  node.rel = 'stylesheet';
+
+  if (id) {
+    node.id = id;
+  }
+
+  var headNode = DOM.querySelector('head');
+  headNode.appendChild(node);
+}
+
 var CSSResource = function () {
-  function CSSResource(address) {
+  function CSSResource(address, injectAsLinkTag) {
     
 
     this.address = address;
     this._scoped = null;
     this._global = false;
+    this._globalInjectAsLinkTag = !!injectAsLinkTag;
     this._alreadyGloballyInjected = false;
   }
 
@@ -57,7 +89,11 @@ var CSSResource = function () {
       _this._scoped.css = text;
       if (_this._global) {
         _this._alreadyGloballyInjected = true;
-        DOM.injectStyles(text);
+        if (_this._globalInjectAsLinkTag) {
+          injectCssLinkTag(_this.address, _this.address);
+        } else {
+          DOM.injectStyles(text);
+        }
       }
     });
   };
@@ -80,18 +116,22 @@ var CSSViewEngineHooks = function () {
       var styleNode = DOM.injectStyles(this.css, content, true);
       styleNode.setAttribute('scoped', 'scoped');
     } else if (this._global && !this.owner._alreadyGloballyInjected) {
-      DOM.injectStyles(this.css);
       this.owner._alreadyGloballyInjected = true;
+      if (this.owner._globalInjectAsLinkTag) {
+        injectCssLinkTag(this.owner.address, this.owner.address);
+      } else {
+        DOM.injectStyles(text);
+      }
     }
   };
 
   return CSSViewEngineHooks;
 }();
 
-export function _createCSSResource(address) {
+export function _createCSSResource(address, injectAsLinkTag) {
   var _dec, _class;
 
-  var ViewCSS = (_dec = resource(new CSSResource(address)), _dec(_class = function (_CSSViewEngineHooks) {
+  var ViewCSS = (_dec = resource(new CSSResource(address, injectAsLinkTag)), _dec(_class = function (_CSSViewEngineHooks) {
     _inherits(ViewCSS, _CSSViewEngineHooks);
 
     function ViewCSS() {

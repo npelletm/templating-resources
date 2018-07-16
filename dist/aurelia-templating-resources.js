@@ -2,7 +2,7 @@ import {inject,Container,Optional} from 'aurelia-dependency-injection';
 import {BoundViewFactory,ViewSlot,customAttribute,templateController,useView,customElement,bindable,ViewResources,resource,ViewCompileInstruction,CompositionEngine,CompositionContext,noView,View,ViewEngine,Animator,TargetInstruction} from 'aurelia-templating';
 import {createOverrideContext,bindingMode,EventSubscriber,bindingBehavior,BindingBehavior,ValueConverter,sourceContext,targetContext,DataAttributeObserver,mergeSplice,valueConverter,ObserverLocator} from 'aurelia-binding';
 import {TaskQueue} from 'aurelia-task-queue';
-import {DOM,FEATURE} from 'aurelia-pal';
+import {DOM,FEATURE,PLATFORM} from 'aurelia-pal';
 import {Loader} from 'aurelia-loader';
 import {relativeToFile} from 'aurelia-path';
 import {mixin} from 'aurelia-metadata';
@@ -631,11 +631,48 @@ function fixupCSSUrls(address, css) {
   });
 }
 
+/**
+ * inject css as a <link href="cssUrl" rel="stylesheet" /> tag in head
+ */
+function injectCssLinkTag(address: string, id?: string) {
+  let url = PLATFORM.global.requirejs.toUrl(address);
+  //remove heading '.' char
+  let cssHref = /^\./i.replace(url, '');
+
+  if (id) {
+    let oldLink = DOM.getElementById(id);
+    if (oldLink) {
+      let isLinkTag = oldLink.tagName.toLowerCase() === 'link';
+
+      if (isLinkTag) {
+        oldLink.href = cssHref;
+        return;
+      }
+
+      throw new Error(`The provided id: '${id}' does not indicate a link tag.`);
+    }
+  }
+
+  //create node
+  let node = DOM.createElement('link');
+  node.href = cssHref;
+  node.rel = 'stylesheet';
+
+  if (id) {
+    node.id = id;
+  }
+
+  let headNode = DOM.querySelector('head');
+  headNode.appendChild(node);
+}
+
 class CSSResource {
-  constructor(address: string) {
+
+  constructor(address: string, injectAsLinkTag?: boolean) {
     this.address = address;
     this._scoped = null;
     this._global = false;
+    this._globalInjectAsLinkTag = !!injectAsLinkTag;
     this._alreadyGloballyInjected = false;
   }
 
@@ -660,7 +697,11 @@ class CSSResource {
         this._scoped.css = text;
         if (this._global) {
           this._alreadyGloballyInjected = true;
-          DOM.injectStyles(text);
+          if (this._globalInjectAsLinkTag) {
+            injectCssLinkTag(this.address, this.address);
+          } else {
+            DOM.injectStyles(text);
+          }
         }
       });
   }
@@ -679,14 +720,19 @@ class CSSViewEngineHooks {
       let styleNode = DOM.injectStyles(this.css, content, true);
       styleNode.setAttribute('scoped', 'scoped');
     } else if (this._global && !this.owner._alreadyGloballyInjected) {
-      DOM.injectStyles(this.css);
+      //dead code ? this._global never set to true.
       this.owner._alreadyGloballyInjected = true;
+      if (this.owner._globalInjectAsLinkTag) {
+        injectCssLinkTag(this.owner.address, this.owner.address);
+      } else {
+        DOM.injectStyles(text);
+      }
     }
   }
 }
 
-export function _createCSSResource(address: string): Function {
-  @resource(new CSSResource(address))
+export function _createCSSResource(address: string, injectAsLinkTag?: boolean): Function {
+  @resource(new CSSResource(address, injectAsLinkTag))
   class ViewCSS extends CSSViewEngineHooks {}
   return ViewCSS;
 }

@@ -31,7 +31,16 @@ import { createFullOverrideContext, updateOverrideContext, getItemsSourceExpress
 import { viewsRequireLifecycle } from './analyze-view-factory';
 import { injectAureliaHideStyleAtHead } from './aurelia-hide-style';
 
-function configure(config) {
+function configure(config, callback) {
+  let options = {
+    injectAsLinkTag: false
+  };
+  if (callback) {
+    if (typeof callback === 'function') {
+      options = callback(options);
+    }
+  }
+
   injectAureliaHideStyleAtHead();
 
   config.globalResources(Compose, If, Else, With, Repeat, Show, Hide, Replaceable, Focus, SanitizeHTMLValueConverter, OneTimeBindingBehavior, OneWayBindingBehavior, ToViewBindingBehavior, FromViewBindingBehavior, TwoWayBindingBehavior, ThrottleBindingBehavior, DebounceBindingBehavior, SelfBindingBehavior, SignalBindingBehavior, UpdateTriggerBindingBehavior, AttrBindingBehavior);
@@ -41,7 +50,7 @@ function configure(config) {
   let viewEngine = config.container.get(ViewEngine);
   let styleResourcePlugin = {
     fetch(address) {
-      return { [address]: _createCSSResource(address) };
+      return { [address]: _createCSSResource(address, options.injectAsLinkTag) };
     }
   };
   ['.css', '.less', '.sass', '.scss', '.styl'].forEach(ext => viewEngine.addResourcePlugin(ext, styleResourcePlugin));

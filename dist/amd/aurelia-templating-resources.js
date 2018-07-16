@@ -7,7 +7,16 @@ define(['exports', './compose', './if', './else', './with', './repeat', './show'
   exports.viewsRequireLifecycle = exports.unwrapExpression = exports.updateOneTimeBinding = exports.isOneTime = exports.getItemsSourceExpression = exports.updateOverrideContext = exports.createFullOverrideContext = exports.NumberRepeatStrategy = exports.SetRepeatStrategy = exports.MapRepeatStrategy = exports.ArrayRepeatStrategy = exports.NullRepeatStrategy = exports.RepeatStrategyLocator = exports.AbstractRepeater = exports.UpdateTriggerBindingBehavior = exports.BindingSignaler = exports.SignalBindingBehavior = exports.SelfBindingBehavior = exports.DebounceBindingBehavior = exports.ThrottleBindingBehavior = exports.TwoWayBindingBehavior = exports.FromViewBindingBehavior = exports.ToViewBindingBehavior = exports.OneWayBindingBehavior = exports.OneTimeBindingBehavior = exports.AttrBindingBehavior = exports.configure = exports.Focus = exports.Replaceable = exports.SanitizeHTMLValueConverter = exports.HTMLSanitizer = exports.Hide = exports.Show = exports.Repeat = exports.With = exports.Else = exports.If = exports.Compose = undefined;
 
 
-  function configure(config) {
+  function configure(config, callback) {
+    var options = {
+      injectAsLinkTag: false
+    };
+    if (callback) {
+      if (typeof callback === 'function') {
+        options = callback(options);
+      }
+    }
+
     (0, _aureliaHideStyle.injectAureliaHideStyleAtHead)();
 
     config.globalResources(_compose.Compose, _if.If, _else.Else, _with.With, _repeat.Repeat, _show.Show, _hide.Hide, _replaceable.Replaceable, _focus.Focus, _sanitizeHtml.SanitizeHTMLValueConverter, _bindingModeBehaviors.OneTimeBindingBehavior, _bindingModeBehaviors.OneWayBindingBehavior, _bindingModeBehaviors.ToViewBindingBehavior, _bindingModeBehaviors.FromViewBindingBehavior, _bindingModeBehaviors.TwoWayBindingBehavior, _throttleBindingBehavior.ThrottleBindingBehavior, _debounceBindingBehavior.DebounceBindingBehavior, _selfBindingBehavior.SelfBindingBehavior, _signalBindingBehavior.SignalBindingBehavior, _updateTriggerBindingBehavior.UpdateTriggerBindingBehavior, _attrBindingBehavior.AttrBindingBehavior);
@@ -19,7 +28,7 @@ define(['exports', './compose', './if', './else', './with', './repeat', './show'
       fetch: function fetch(address) {
         var _ref;
 
-        return _ref = {}, _ref[address] = (0, _cssResource._createCSSResource)(address), _ref;
+        return _ref = {}, _ref[address] = (0, _cssResource._createCSSResource)(address, options.injectAsLinkTag), _ref;
       }
     };
     ['.css', '.less', '.sass', '.scss', '.styl'].forEach(function (ext) {

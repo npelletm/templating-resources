@@ -38,7 +38,27 @@ import {
 import {viewsRequireLifecycle} from './analyze-view-factory';
 import {injectAureliaHideStyleAtHead} from './aurelia-hide-style';
 
-function configure(config) {
+/**
+ * Global templating-resources configuration
+ */
+interface TemplatingResourcesConfiguration {
+  /**
+   * Set to true to inject css as a <link href="css" /> tag. Default false.
+   */
+  injectAsLinkTag?: boolean;
+}
+
+function configure(config, callback?: (config: TemplatingResourcesConfiguration) => void) {
+  //default options
+  let options: TemplatingResourcesConfiguration = {
+    injectAsLinkTag: false
+  };
+  if (callback) {
+    if (typeof callback === 'function') {
+      options = callback(options);
+    }
+  }
+
   injectAureliaHideStyleAtHead();
 
   config.globalResources(
@@ -70,7 +90,7 @@ function configure(config) {
   let viewEngine = config.container.get(ViewEngine);
   let styleResourcePlugin = {
     fetch(address) {
-      return { [address]: _createCSSResource(address) };
+      return { [address]: _createCSSResource(address, options.injectAsLinkTag) };
     }
   };
   ['.css', '.less', '.sass', '.scss', '.styl'].forEach(ext => viewEngine.addResourcePlugin(ext, styleResourcePlugin));

@@ -69,7 +69,16 @@ var _analyzeViewFactory = require('./analyze-view-factory');
 
 var _aureliaHideStyle = require('./aurelia-hide-style');
 
-function configure(config) {
+function configure(config, callback) {
+  var options = {
+    injectAsLinkTag: false
+  };
+  if (callback) {
+    if (typeof callback === 'function') {
+      options = callback(options);
+    }
+  }
+
   (0, _aureliaHideStyle.injectAureliaHideStyleAtHead)();
 
   config.globalResources(_compose.Compose, _if.If, _else.Else, _with.With, _repeat.Repeat, _show.Show, _hide.Hide, _replaceable.Replaceable, _focus.Focus, _sanitizeHtml.SanitizeHTMLValueConverter, _bindingModeBehaviors.OneTimeBindingBehavior, _bindingModeBehaviors.OneWayBindingBehavior, _bindingModeBehaviors.ToViewBindingBehavior, _bindingModeBehaviors.FromViewBindingBehavior, _bindingModeBehaviors.TwoWayBindingBehavior, _throttleBindingBehavior.ThrottleBindingBehavior, _debounceBindingBehavior.DebounceBindingBehavior, _selfBindingBehavior.SelfBindingBehavior, _signalBindingBehavior.SignalBindingBehavior, _updateTriggerBindingBehavior.UpdateTriggerBindingBehavior, _attrBindingBehavior.AttrBindingBehavior);
@@ -81,7 +90,7 @@ function configure(config) {
     fetch: function fetch(address) {
       var _ref;
 
-      return _ref = {}, _ref[address] = (0, _cssResource._createCSSResource)(address), _ref;
+      return _ref = {}, _ref[address] = (0, _cssResource._createCSSResource)(address, options.injectAsLinkTag), _ref;
     }
   };
   ['.css', '.less', '.sass', '.scss', '.styl'].forEach(function (ext) {

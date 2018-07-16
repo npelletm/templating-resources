@@ -41,7 +41,8 @@ import {
 } from 'aurelia-task-queue';
 import {
   DOM,
-  FEATURE
+  FEATURE,
+  PLATFORM
 } from 'aurelia-pal';
 import {
   Loader

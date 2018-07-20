@@ -75,7 +75,7 @@ function configure(config, callback) {
   };
   if (callback) {
     if (typeof callback === 'function') {
-      options = callback(options);
+      callback(options);
     }
   }
 

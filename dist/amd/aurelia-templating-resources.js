@@ -13,7 +13,7 @@ define(['exports', './compose', './if', './else', './with', './repeat', './show'
     };
     if (callback) {
       if (typeof callback === 'function') {
-        options = callback(options);
+        callback(options);
       }
     }
 

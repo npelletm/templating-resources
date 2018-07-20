@@ -28,7 +28,7 @@ function fixupCSSUrls(address, css) {
 function injectCssLinkTag(address, id) {
   var url = PLATFORM.global.requirejs.toUrl(address);
 
-  var cssHref = /^\./i.replace(url, '');
+  var cssHref = url.replace(/^\./i, '');
 
   if (id) {
     var oldLink = DOM.getElementById(id);

@@ -48,14 +48,14 @@ interface TemplatingResourcesConfiguration {
   injectAsLinkTag?: boolean;
 }
 
-function configure(config, callback?: (config: TemplatingResourcesConfiguration) => void) {
+function configure(config, callback/*?: (config: TemplatingResourcesConfiguration) => void*/) {
   //default options
   let options: TemplatingResourcesConfiguration = {
     injectAsLinkTag: false
   };
   if (callback) {
     if (typeof callback === 'function') {
-      options = callback(options);
+      callback(options);
     }
   }
 

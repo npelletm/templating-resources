@@ -1,3 +1,8 @@
+<a name="1.7.2-beta.1"></a>
+## [1.7.2-beta.1](https://github.com/aurelia/templating-resources/compare/1.7.1...1.7.2-beta.1) (2018-07-20)
+* **configure:** fix add injectAsLinkTag option
+
+
 <a name="1.7.2-beta.0"></a>
 ## [1.7.2-beta.0](https://github.com/aurelia/templating-resources/compare/1.7.1...1.7.2-beta.0) (2018-07-16)
 

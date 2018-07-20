@@ -26,7 +26,7 @@ function fixupCSSUrls(address, css) {
 function injectCssLinkTag(address: string, id?: string) {
   let url = PLATFORM.global.requirejs.toUrl(address);
   //remove heading '.' char
-  let cssHref = /^\./i.replace(url, '');
+  let cssHref = url.replace(/^\./i, '');
 
   if (id) {
     let oldLink = DOM.getElementById(id);
@@ -109,7 +109,7 @@ class CSSViewEngineHooks {
       let styleNode = DOM.injectStyles(this.css, content, true);
       styleNode.setAttribute('scoped', 'scoped');
     } else if (this._global && !this.owner._alreadyGloballyInjected) {
-      //dead code ? this._global never set to true.
+      //dead code? this._global never set to true.
       this.owner._alreadyGloballyInjected = true;
       if (this.owner._globalInjectAsLinkTag) {
         injectCssLinkTag(this.owner.address, this.owner.address);

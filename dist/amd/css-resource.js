@@ -50,7 +50,7 @@ define(['exports', 'aurelia-templating', 'aurelia-loader', 'aurelia-dependency-i
   function injectCssLinkTag(address, id) {
     var url = _aureliaPal.PLATFORM.global.requirejs.toUrl(address);
 
-    var cssHref = /^\./i.replace(url, '');
+    var cssHref = url.replace(/^\./i, '');
 
     if (id) {
       var oldLink = _aureliaPal.DOM.getElementById(id);
